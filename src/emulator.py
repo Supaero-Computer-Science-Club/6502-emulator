@@ -1,4 +1,7 @@
+import argparse
+import numpy as np
 from pynput import keyboard
+import traceback
 
 
 LOW  = 0
@@ -33,6 +36,7 @@ def cpu_wrapper(func, cpu):
             func(*args, cpu=cpu, **kwargs)
         except Exception as e:  # looking for real exceptions to handle, temporary.
             print(f"EXCEPTION of type {type(e)} SKIPPED:", e)
+            print(traceback.format_exc())
     return wrapped_func
 
 
@@ -151,6 +155,30 @@ class ROM(Memory):
     def __setitem__(self, index, byte):
         pass
 
+
+class Memory64(Memory):
+    def __init__(self, ram, rom):
+        self._orgs = [(ram._org, ram._org + len(ram) - 1, ram),
+                      (rom._org, rom._org + len(rom) - 1, rom)]
+        self._orgs.sort()
+        for i in range(len(self._orgs) - 1):
+            if self._orgs[i][1] >= self._orgs[i + 1][0]:
+                raise ValueError("wrong value encountered for memory map.")
+        if self._orgs[-1][1] >= 65536:
+            raise ValueError("memory map too big for 64k.")
+
+    def __getitem__(self, index):
+        for i in range(len(self._orgs)):
+            if self._orgs[i][0] <= index <= self._orgs[i][1]:
+                return self._orgs[i][-1][index]
+
+    def __setitem__(self, index, byte):
+        for i in range(len(self._orgs)):
+            if self._orgs[i][0] <= index <= self._orgs[i][1]:
+                self._orgs[i][-1][index] = byte % 256
+                break
+
+
 class CPU:
     def __init__(self, ram, rom, via):
         # internals.
@@ -158,11 +186,13 @@ class CPU:
         self._X  = 0x00
         self._Y  = 0x00
         self._SP = 0x00
-        self._PC = 0x00
+        self._PC = np.random.randint(65536)
 
         self._ram = ram
         self._rom = rom
         self._via = via
+
+        self.memory = Memory64(ram, rom)
 
         # external pins.
         self.VPB   = None
@@ -182,6 +212,8 @@ class CPU:
         self.RESB  = None
         self._PHI2 = None
 
+        self._state = ["code", 0]
+
     def update(self):
         # reset the CPU:
         if self.RESB == LOW:
@@ -189,32 +221,76 @@ class CPU:
             self._X  = 0x00
             self._Y  = 0x00
             self._SP = 0x0124
-            self._PC = 0xfffc
 
-            self.addr = self._PC
+            self._state = ["reset", 9]
+
 
         if (self.PHI2) and (self.PHI2 != self._PHI2):
-            print(self)
+            if self._state[0] == "reset":
+                if self._state[1] == 2:
+                    self.addr = 0xfffc
+                    self.data = self.memory[self.addr]
+                    self.RWB = 1
+                    self._PC = self.data
+                elif self._state[1] == 1:
+                    self.addr += 1
+                    self.data = self.memory[self.addr]
+                    self.RWB = 1
+                    self._PC += (self.data << 8)
+                else:
+                    self.addr = np.random.randint(65536)
+                self._state[1] -= 1
+                if not self._state[1]:
+                    self._state[0] = "code"
+
+            elif self._state[0] == "code":
+                self.addr = self._PC
+                self.RWB = 1
+                self.data = self.memory[self.addr]
+
+                # treat instructions.
+
+                self._PC = (self._PC + 1) % 65536
+
+            print(f"\r{self}")
 
         self._PHI2 = self.PHI2
 
     def __str__(self):
-        msg = to_bin(self.addr, 16) + ' ' + to_bin(self.data, 8) + ' ' + to_hex(self.addr, 4) + ' ' + ('r' if self.RWB else 'W') + ' ' + to_hex(self.data, 2)
+        msg = to_bin(self.addr, 17) + ' ' + to_bin(self.data, 8) + ' ' + to_hex(self.addr, 4) + ' ' + ('r' if self.RWB else 'W') + ' ' + to_hex(self.data, 2)
         return msg
 
 
 def main():
-    # RAM tests.
-    ram = RAM(bits=15)
-    ram.set_org(0x0000)
+    parser = argparse.ArgumentParser("parser to help the architecture of the 6502-based machine.")
 
-    # ROM tests.
-    rom = ROM("bin/a.out")
-    rom.set_org(0x8000)
+    parser.add_argument("--ram-bits", "-rb", default=15,
+                        help="the number of bits used by RAM (defaults to 15).")
+    parser.add_argument("--ram-org", "-ao", default=0x0000,
+                        help="the base address of RAM (defaults to $0000).")
+    parser.add_argument("--rom-file", "-rf", default="bin/a.out",
+                        help="the ROM file (defaults to'bin/a.out').")
+    parser.add_argument("--rom-org", "-oo", default=0x8000,
+                        help="the base address of ROM (defaults to $8000).")
 
-    # CPU tests.
-    cpu = CPU(ram, rom, None)
+    args = parser.parse_args()
 
+    # put RAM in circuit.
+    ram = RAM(bits=args.ram_bits)
+    ram.set_org(args.ram_org)
+
+    # put ROM in circuit.
+    rom = ROM(args.rom_file)
+    rom.set_org(args.rom_org)
+
+    # put Versatile Interface Adapter in circuit.
+    via = None
+
+    # put CPU in the circuit.
+    # wire it with RAM, ROM and Interface.
+    cpu = CPU(ram, rom, via)
+
+    # wire permanent pins of the CPU.
     cpu.VPB   = None  # NC
     cpu.RDY   = HIGH
     cpu.PHI1O = None  # NC
@@ -226,7 +302,7 @@ def main():
     cpu.PHI2  = None  # NC
     cpu.SOB   = None  # NC
     cpu.PHI2O = None  # NC
-    cpu.RESB  = None
+    cpu.RESB  = HIGH
 
     # collect events until released.
     with keyboard.Listener(
