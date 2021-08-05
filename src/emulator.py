@@ -3,6 +3,8 @@ import numpy as np
 from pynput import keyboard
 import traceback
 
+from opcodes import opcodes
+
 
 LOW  = 0
 HIGH = 5
@@ -57,7 +59,7 @@ def on_press(key, cpu, prt=print):
         elif key.char.lower() == 'r':
             cpu.RESB = LOW
 
-    cpu.update()
+    cpu.cycle()
 
 
 def on_release(key, cpu, prt=print):
@@ -76,7 +78,7 @@ def on_release(key, cpu, prt=print):
         elif key.char.lower() == 'r':
             cpu.RESB = HIGH
 
-    cpu.update()
+    cpu.cycle()
 
 def print8(byte):
     print(to_hex(byte, nb_chars=2))
@@ -214,7 +216,7 @@ class CPU:
 
         self._state = ["code", 0]
 
-    def update(self):
+    def cycle(self):
         # reset the CPU:
         if self.RESB == LOW:
             self._A  = 0x00
@@ -241,33 +243,20 @@ class CPU:
                     self.addr = np.random.randint(65536)
                 self._state[1] -= 1
                 if not self._state[1]:
-                    self._state[0] = "code"
+                    self._state[0] = "fetch"
 
-            elif self._state[0] == "code":
+            elif self._state[0] == "fetch":
                 self.addr = self._PC
                 self.RWB = 1
                 self.data = self.memory[self.addr]
 
-                instruction = self.data
-                # treat instructions.
-                if instruction = 
-#                        0          1         2        3        4        5        6       7     8     9       a       b         c       d       e      f
-#                  0 BRK-s ORA-(zp,x)                    TSB-zp   ORA-zp   ASL-zp   RMB0-zp PHP-s ORA-#   ASL-A         TSB-a     ORA-a   ASL-a   BBR0-r
-#                  1 BPL-r ORA-(zp),y  ORA-(zp)          TRB-zp   ORA-zp,x ASL-zp,x RMB1-zp CLC-i ORA-a,y INC-A         TRB-a     ORA-a,x ASL-a,x BBR1-r
-#                  2 JSR-a AND-(zp,x)                    BIT-zp   AND-zp   ROL-zp   RMB2-zp PLP-s AND-#   ROL-A         BIT-a     AND-a   ROL-a   BBR2-r
-#                  3 BMI-r AND-(zp),y  AND-(zp)          BIT-zp,x AND-zp,x ROL-zp,x RMB3-zp SEC-I AND-a,y DEC-A         BIT-a,x   AND-a,x ROL-a,x BBR3-r
-#                  4 RTI-s EOR-(zp,x)                             EOR-zp   LSR-zp   RMB4-zp PHA-s EOR-#   LSR-A         JMP-a     EOR-a   LSR-a   BBR4-r
-#                  5 BVC-r EOR-(zp),y  EOR-(zp)                   EOR-zp,x LSR-zp,x RMB5-zp CLI-i EOR-a,y PHY-s                   EOR-a,x LSR-a,x BBR5-r
-#                  6 RTS-s ADC-(zp,x)                    STZ-zp   ADC-zp   ROR-zp   RMB6-zp PLA-s ADC-#   ROR-A         JMP-(a)   ADC-a   ROR-a   BBR6-r
-#                  7 BVS-r ADC-(zp),y  ADC-(zp)          STZ-zp,x ADC-zp,x ROR-zp,x RMB7-zp SEI-i ADC-a,y PLY-s         JMP-(a.x) ADC-a,x ROR-a,x BBR7-r
-#                  8 BRA-r STA-(zp,x)                    STY-zp   STA-zp   STX-zp   SMB0-zp DEY-i BIT-#   TXA-i         STY-a     STA-a   STX-a   BBS0-r
-#                  9 BCC-r STA-(zp),y  STA-(zp)          STY-zp,x STA-zp,x STX-zp,y SMB1-zp TYA-i STA-a,y TXS-i         STZ-a     STA-a,x STZ-a,x.BBS1-r
-#                  a LDY-# LDA-(zp,x)  LDX-#             LDY-zp   LDA-zp   LDX-zp   SMB2-zp TAY-i LDA-#   TAX-i         LDY-A     LDA-a   LDX-a   BBS2-r
-#                  b BCS-r LDA-(zp),y  LDA-(zp)          LDY-zp,x LDA-zp,x LDX-zp,y SMB3-zp CLV-i LDA-A,y TSX-i         LDY-a,x   LDA-a,x LDX-a,y BBS3-r
-#                  c CPY-# CMP-(zp,x)                    CPY-zp   CMP-zp   DEC-zp   SMB4-zp INY-i CMP-#   DEX-i  WAI-I  CPY-a     CMP-a   DEC-a   BBS4-r
-#                  d BNE-r CMP-(zp),y  CMP-(zp)                   CMP-zp,x DEC-zp,x SMB5-zp CLD-i CMP-a,y PHX-s  STP-I            CMP-a,x DEC-a,x BBS5-r
-#                  e CPX-# SBC-(zp,x)                    CPX-zp   SBC-zp   INC-zp   SMB6-zp INX-i SBC-#   NOP-i         CPX-a     SBC-a   INC-a   BBS6-r
-#                  f BEQ-r SBC-(zp),y  SBC-(zp)                   SBC-zp,x INC-zp,x SMB7-zp SED-i SBC-a,y PLX-s                   SBC-a,x INC-a,x BBS7-r
+                opcode = self.data
+                instr, addr_mode, nb_ucodes = opcodes[opcode]
+
+            elif self._state[0] == "decode":
+                pass
+            elif self._state[0] == "execute":
+                pass
 
                 self._PC = (self._PC + 1) % 65536
 
@@ -276,7 +265,8 @@ class CPU:
         self._PHI2 = self.PHI2
 
     def __str__(self):
-        msg = to_bin(self.addr, 17) + ' ' + to_bin(self.data, 8) + ' ' + to_hex(self.addr, 4) + ' ' + ('r' if self.RWB else 'W') + ' ' + to_hex(self.data, 2)
+        msg = to_bin(self.addr, 17) + ' ' + to_bin(self.data, 8) + ' ' 
+        msg += to_hex(self.addr, 4) + ' ' + ('r' if self.RWB else 'W') + ' ' + to_hex(self.data, 2)
         return msg
 
 
