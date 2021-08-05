@@ -196,9 +196,9 @@ def main():
 
     # put CPU in the circuit.
     pins = 0b0000000000000000000000000000000000000000
-    pins |= (M65C02_VCC|M65C02_RDY|M65C02_IRQB|M65C02_NMIB|M65C02_BE|M65C02_RESB)
+    pins |= (M65C02_VCC|M65C02_RDY|M65C02_IRQB|M65C02_NMIB|M65C02_BE|M65C02_RESB|M65C02_SYNC)
     circuit = Circuit(pins)
-    cpu = M65C02(circuit.pins)
+    cpu = M65C02()
 
     # collect events until released.
     with keyboard.Listener(
