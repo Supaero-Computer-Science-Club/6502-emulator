@@ -4,12 +4,18 @@ from pynput import keyboard
 import traceback
 
 from opcodes import opcodes
+from mos65c02 import M65C02
+from mos65c02 import *
+
+from utils import print8
+from utils import to_bin
+from utils import to_hex
 
 
 LOW  = 0
 HIGH = 5
 
-def cpu_wrapper(func, cpu):
+def cpu_wrapper(func, cpu, circuit):
     """
 #        A wrapper that takes care of all possible expections, expecially I/O ones.
 #        This wrapper has two main purposes:
@@ -35,14 +41,14 @@ def cpu_wrapper(func, cpu):
     """
     def wrapped_func(*args, **kwargs):
         try:
-            func(*args, cpu=cpu, **kwargs)
+            func(*args, cpu=cpu, circuit=circuit, **kwargs)
         except Exception as e:  # looking for real exceptions to handle, temporary.
             print(f"EXCEPTION of type {type(e)} SKIPPED:", e)
             print(traceback.format_exc())
     return wrapped_func
 
 
-def on_press(key, cpu, prt=print):
+def on_press(key, cpu, circuit, prt=print):
     """
 
         Args
@@ -55,14 +61,14 @@ def on_press(key, cpu, prt=print):
     if isinstance(key, keyboard._xorg.KeyCode):
         print('\r', end='')
         if key.char.lower() == 'c':
-            cpu.PHI2 = HIGH
+            circuit.pins |= M65C02_PHI2
         elif key.char.lower() == 'r':
-            cpu.RESB = LOW
+            circuit.pins &= (M65C02_RESB ^ ((1<<40) - 1))
 
-    cpu.cycle()
+    circuit.pins = cpu.tick(circuit.pins)
 
 
-def on_release(key, cpu, prt=print):
+def on_release(key, cpu, circuit, prt=print):
     """
 
         Args
@@ -74,34 +80,16 @@ def on_release(key, cpu, prt=print):
     """
     if isinstance(key, keyboard._xorg.KeyCode):
         if key.char.lower() == 'c':
-            cpu.PHI2 = LOW
+            circuit.pins &= (M65C02_PHI2 ^ ((1<<40) - 1))
         elif key.char.lower() == 'r':
-            cpu.RESB = HIGH
+            circuit.pins |= M65C02_RESB
 
-    cpu.cycle()
+    circuit.pins = cpu.tick(circuit.pins)
 
-def print8(byte):
-    print(to_hex(byte, nb_chars=2))
 
-def to_bin(number, nb_bits=8):
-    """
-        Converts an integer to binary with a given number of bits.
-
-        Args
-        ----
-        number : int
-            the number to convert to binary.
-        nb_bits  : int, optional
-            the number of bits.
-
-        Returns:
-        bin : str
-            the string binary representation of the number, with 'nb_bits' bits.
-    """
-    return bin(number)[2:][::-1].ljust(nb_bits,'0')[::-1]
-
-def to_hex(number, nb_chars=2):
-    return hex(number)[2:][::-1].ljust(nb_chars, '0')[::-1]
+class Circuit:
+    def __init__(self, pins):
+        self.pins = pins
 
 
 class Memory:
@@ -181,95 +169,6 @@ class Memory64(Memory):
                 break
 
 
-class CPU:
-    def __init__(self, ram, rom, via):
-        # internals.
-        self._A  = 0x00
-        self._X  = 0x00
-        self._Y  = 0x00
-        self._SP = 0x00
-        self._PC = np.random.randint(65536)
-
-        self._ram = ram
-        self._rom = rom
-        self._via = via
-
-        self.memory = Memory64(ram, rom)
-
-        # external pins.
-        self.VPB   = None
-        self.RDY   = None
-        self.PHI1O = None
-        self.IRQB  = None
-        self.MLB   = None
-        self.NMIB  = None
-        self.SYNC  = None
-        self.addr  = 0x0000
-        self.data  = 0x00
-        self.RWB   = None
-        self.BE    = None
-        self.PHI2  = None
-        self.SOB   = None
-        self.PHI2O = None
-        self.RESB  = None
-        self._PHI2 = None
-
-        self._state = ["code", 0]
-
-    def cycle(self):
-        # reset the CPU:
-        if self.RESB == LOW:
-            self._A  = 0x00
-            self._X  = 0x00
-            self._Y  = 0x00
-            self._SP = 0x0124
-
-            self._state = ["reset", 9]
-
-
-        if (self.PHI2) and (self.PHI2 != self._PHI2):
-            if self._state[0] == "reset":
-                if self._state[1] == 2:
-                    self.addr = 0xfffc
-                    self.data = self.memory[self.addr]
-                    self.RWB = 1
-                    self._PC = self.data
-                elif self._state[1] == 1:
-                    self.addr += 1
-                    self.data = self.memory[self.addr]
-                    self.RWB = 1
-                    self._PC += (self.data << 8)
-                else:
-                    self.addr = np.random.randint(65536)
-                self._state[1] -= 1
-                if not self._state[1]:
-                    self._state[0] = "fetch"
-
-            elif self._state[0] == "fetch":
-                self.addr = self._PC
-                self.RWB = 1
-                self.data = self.memory[self.addr]
-
-                opcode = self.data
-                instr, addr_mode, nb_ucodes = opcodes[opcode]
-
-            elif self._state[0] == "decode":
-                pass
-            elif self._state[0] == "execute":
-                pass
-
-                self._PC = (self._PC + 1) % 65536
-
-            print(f"\r{self}")
-
-        self._PHI2 = self.PHI2
-
-    def __str__(self):
-        msg = to_bin(self.addr, 17) + ' ' + to_bin(self.data, 8) + ' ' 
-        msg += to_hex(self.addr, 4) + ' ' + ('r' if self.RWB else 'W') + ' ' + to_hex(self.data, 2)
-        return msg
-
-
 def main():
     parser = argparse.ArgumentParser("parser to help the architecture of the 6502-based machine.")
 
@@ -296,27 +195,15 @@ def main():
     via = None
 
     # put CPU in the circuit.
-    # wire it with RAM, ROM and Interface.
-    cpu = CPU(ram, rom, via)
-
-    # wire permanent pins of the CPU.
-    cpu.VPB   = None  # NC
-    cpu.RDY   = HIGH
-    cpu.PHI1O = None  # NC
-    cpu.IRQB  = HIGH  # disabled for now.
-    cpu.MLB   = None  # NC
-    cpu.NMIB  = HIGH
-    cpu.SYNC  = None  # NC
-    cpu.BE    = HIGH
-    cpu.PHI2  = None  # NC
-    cpu.SOB   = None  # NC
-    cpu.PHI2O = None  # NC
-    cpu.RESB  = HIGH
+    pins = 0b0000000000000000000000000000000000000000
+    pins |= (M65C02_VCC|M65C02_RDY|M65C02_IRQB|M65C02_NMIB|M65C02_BE|M65C02_RESB)
+    circuit = Circuit(pins)
+    cpu = M65C02(circuit.pins)
 
     # collect events until released.
     with keyboard.Listener(
-            on_press=cpu_wrapper(on_press, cpu),
-            on_release=cpu_wrapper(on_release, cpu)) as listener:
+            on_press=cpu_wrapper(on_press, cpu, circuit),
+            on_release=cpu_wrapper(on_release, cpu, circuit)) as listener:
         listener.join()
 
 
