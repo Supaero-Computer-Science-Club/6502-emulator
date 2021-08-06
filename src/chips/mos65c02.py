@@ -2756,7 +2756,7 @@ class M65C02:
         return self.circuit.pins
 
     def flip(self, stdscr, y, x):
-        lines = [f"PC: {to_hex(self._PC, 4)}",
+        lines = [f" PC: {to_hex(self._PC, 4)}",
                  f"  A: {to_hex(self._A, 2)}",
                  f"  X: {to_hex(self._X, 2)}",
                  f"  Y: {to_hex(self._Y, 2)}",
@@ -2766,8 +2766,36 @@ class M65C02:
                  f" IR: {to_hex(self._IR>>3, 2)} {to_bin(self._IR&7, 3)}",
                  f"BRK: {to_bin(self._brk_flags, 3)}"
                 ]
+        stdscr.addstr(y, x, "65C02")
         for row, line in enumerate(lines):
-            stdscr.addstr(y + row, x, line)
+            stdscr.addstr(y+1 + row, x, line)
+
+        lines = [
+                     "+-----------------+",
+                    f"| 1:VPB    RESB:40|",
+                    f"| 2:RDY   PHI2O:39|",
+                    f"| 3:PHI1O   SOB:38|",
+                    f"| 4:IRQB   PHI2:37|",
+                    f"| 5:MLB      BE:36|",
+                    f"| 6:NMIB     NC:35|",
+                    f"| 7:SYNC    RWB:34|",
+                    f"| 8:VCC      D0:33|",
+                    f"| 9: A0      D1:32|",
+                    f"|10: A1      D2:31|",
+                    f"|11: A2      D3:30|",
+                    f"|12: A3      D4:29|",
+                    f"|13: A4      D5:28|",
+                    f"|14: A5      D6:27|",
+                    f"|15: A6      D7:26|",
+                    f"|16: A7     A15:25|",
+                    f"|17: A8     A14:24|",
+                    f"|18: A9     A13:23|",
+                    f"|19:A10     A12:22|",
+                    f"|20:A11     GND:21|",
+                     "+-----------------+"
+                ]
+        for row, line in enumerate(lines):
+            stdscr.addstr(y+1 + row, x+15, line)
 
 
 if __name__ == "__main__":

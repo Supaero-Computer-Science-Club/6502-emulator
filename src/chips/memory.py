@@ -48,6 +48,10 @@ class RAM(Memory):
     def __setitem__(self, index, byte):
         self._bytes[index - self._org] = byte % 256
 
+    def flip(self, stdscr, y, x):
+        stdscr.addstr(y, x, "RAM")
+        super().flip(stdscr, y+1, x)
+
 
 class ROM(Memory):
     def __init__(self, rom_file):
@@ -57,6 +61,10 @@ class ROM(Memory):
 
     def __setitem__(self, index, byte):
         pass
+
+    def flip(self, stdscr, y, x):
+        stdscr.addstr(y, x, "ROM")
+        super().flip(stdscr, y+1, x)
 
 
 class Memory64(Memory):
