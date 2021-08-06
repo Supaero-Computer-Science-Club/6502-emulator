@@ -3,13 +3,13 @@ import numpy as np
 from pynput import keyboard
 import traceback
 
-from opcodes import opcodes
 from mos65c02 import M65C02
 from mos65c02 import *
 
 from utils import print8
 from utils import to_bin
 from utils import to_hex
+from utils import print_pins
 
 
 LOW  = 0
@@ -65,7 +65,7 @@ def on_press(key, cpu, circuit, prt=print):
         elif key.char.lower() == 'r':
             circuit.pins &= (M65C02_RESB ^ ((1<<40) - 1))
 
-    circuit.pins = cpu.tick(circuit.pins)
+    circuit.update()
 
 
 def on_release(key, cpu, circuit, prt=print):
@@ -84,12 +84,36 @@ def on_release(key, cpu, circuit, prt=print):
         elif key.char.lower() == 'r':
             circuit.pins |= M65C02_RESB
 
-    circuit.pins = cpu.tick(circuit.pins)
+    circuit.update()
 
 
 class Circuit:
-    def __init__(self, pins):
+    def __init__(self, pins, cpu, ram, rom):
         self.pins = pins
+        self.cpu = cpu
+        self.ram = ram
+        self.rom = rom
+        self.memory = Memory64(ram, rom)
+
+    def update(self):
+        addr = self.cpu._GA()
+        data = self.cpu._GD()
+        RWB = self.pins&M65C02_RWB
+
+        if RWB:
+            data = self.memory[addr]
+            self.cpu._SD(data)
+        else:
+            self.memory[addr] = data
+
+        self.pins = self.cpu.tick(self.pins)
+
+        if ((self.pins & M65C02_PHI2)):
+            print_pins(self.pins, [[self.cpu._IR, 11, "IR"],
+                                   [self.cpu._PC, 16, "PC"],
+                                   [self.cpu._S, 8, 'S'],
+                                   [self.cpu._brk_flags, 3, '']], end="   ")
+            print(to_hex(addr, 4),'r' if RWB else 'W', to_hex(data, 2))
 
 
 class Memory:
@@ -129,7 +153,7 @@ class Memory:
 
 class RAM(Memory):
     def __init__(self, bits):
-        self._bytes = bytearray([0] * 2 ** bits)
+        self._bytes = bytearray([255] * 2 ** bits)
         self._org = 0x0000
 
     def __setitem__(self, index, byte):
@@ -195,10 +219,11 @@ def main():
     via = None
 
     # put CPU in the circuit.
+    cpu = M65C02()
     pins = 0b0000000000000000000000000000000000000000
     pins |= (M65C02_VCC|M65C02_RDY|M65C02_IRQB|M65C02_NMIB|M65C02_BE|M65C02_RESB|M65C02_SYNC)
-    circuit = Circuit(pins)
-    cpu = M65C02()
+    circuit = Circuit(pins, cpu, ram, rom)
+    cpu.attach_circuit(circuit)
 
     # collect events until released.
     with keyboard.Listener(
