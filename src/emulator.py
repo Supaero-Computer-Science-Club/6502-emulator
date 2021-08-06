@@ -1,199 +1,22 @@
 import argparse
-import numpy as np
 from pynput import keyboard
-import traceback
+import curses
 
-from mos65c02 import M65C02
-from mos65c02 import *
+from chips.mos65c02 import M65C02
+from chips.mos65c02 import *
 
-from utils import print8
-from utils import to_bin
-from utils import to_hex
-from utils import print_pins
+from chips.memory import RAM
+from chips.memory import ROM
+from chips.Circuit import Circuit
 
-
-LOW  = 0
-HIGH = 5
-
-def cpu_wrapper(func, cpu, circuit):
-    """
-#        A wrapper that takes care of all possible expections, expecially I/O ones.
-#        This wrapper has two main purposes:
-#            - avoiding the laptop<->arduino communication to stop because of bugs.
-#            - looking for exact expections origin to correct them and make the 
-#            communication more robust.
-#
-#        Args
-#        ----
-#        func : function
-#            the function to wrap, namely on_press or on_release, which read the
-#            keyboard strokes.
-#        device : serial.serialposix.Serial
-#            the device to communicate with, namely an arduino board.
-#        scancodes : dict
-#            a dictionary of scancodes used by the communication protocol.
-#
-#        Returns
-#        -------
-#        wrapped_func : function
-#            the wrapped function, doing the same thing, with extra arguments and
-#            expection handling to avoid communication protocol failures.
-    """
-    def wrapped_func(*args, **kwargs):
-        try:
-            func(*args, cpu=cpu, circuit=circuit, **kwargs)
-        except Exception as e:  # looking for real exceptions to handle, temporary.
-            print(f"EXCEPTION of type {type(e)} SKIPPED:", e)
-            print(traceback.format_exc())
-    return wrapped_func
+from utils import cpu_wrapper
+from utils import on_press
+from utils import on_release
+from utils import curses_wrapper
 
 
-def on_press(key, cpu, circuit, prt=print):
-    """
-
-        Args
-        ----
-        key : keyboard._xorg.KeyCode or Key enum.
-            a key object given by the pynput.keyboad module, whenever a key is pressed.
-        prt : function, optional
-            a print-like function. Might be void if no verbose.
-    """
-    if isinstance(key, keyboard._xorg.KeyCode):
-        print('\r', end='')
-        if key.char.lower() == 'c':
-            circuit.pins |= M65C02_PHI2
-        elif key.char.lower() == 'r':
-            circuit.pins &= (M65C02_RESB ^ ((1<<40) - 1))
-
-    circuit.update()
-
-
-def on_release(key, cpu, circuit, prt=print):
-    """
-
-        Args
-        ----
-        key : keyboard._xorg.KeyCode or Key enum.
-            a key object given by the pynput.keyboad module, whenever a key is pressed.
-        prt : function, optional
-            a print-like function. Might be void if no verbose.
-    """
-    if isinstance(key, keyboard._xorg.KeyCode):
-        if key.char.lower() == 'c':
-            circuit.pins &= (M65C02_PHI2 ^ ((1<<40) - 1))
-        elif key.char.lower() == 'r':
-            circuit.pins |= M65C02_RESB
-
-    circuit.update()
-
-
-class Circuit:
-    def __init__(self, pins, cpu, ram, rom):
-        self.pins = pins
-        self.cpu = cpu
-        self.ram = ram
-        self.rom = rom
-        self.memory = Memory64(ram, rom)
-
-    def update(self):
-        addr = self.cpu._GA()
-        data = self.cpu._GD()
-        RWB = self.pins&M65C02_RWB
-
-        if RWB:
-            data = self.memory[addr]
-            self.cpu._SD(data)
-        else:
-            self.memory[addr] = data
-
-        self.pins = self.cpu.tick(self.pins)
-
-        if ((self.pins & M65C02_PHI2)):
-            print_pins(self.pins, [[self.cpu._IR, 11, "IR"],
-                                   [self.cpu._PC, 16, "PC"],
-                                   [self.cpu._S, 8, 'S'],
-                                   [self.cpu._brk_flags, 3, '']], end="   ")
-            print(to_hex(addr, 4),'r' if RWB else 'W', to_hex(data, 2))
-
-
-class Memory:
-    def __len__(self):
-        return len(self._bytes)
-
-    def __getitem__(self, index):
-        return self._bytes[index - self._org]
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        lines = []
-        _prev_line = ''
-        _block_of_bytes = False
-        for i in range(0, len(self._bytes), 16):
-            line = ' '.join(map(str, [to_hex(self._bytes[i + j]) for j in range(16)]))
-            if line != _prev_line:
-                _prev_line = line
-                ascii_chars = ''.join([chr(self._bytes[i + j]) if 32 <= self._bytes[i + j] <= 127 else '.' for j in range(16)])
-                line = to_hex(i, 8) + "  " + line[:23] + "  " + line[24:] + "  " + '|' + ascii_chars + '|' 
-                if _block_of_bytes:
-                    lines.append('*')
-                    _block_of_bytes = False
-                lines.append(line)
-            else:
-                _block_of_bytes = True
-        if _block_of_bytes:
-            lines.append('*')
-        lines.append(to_hex(i + 16, 8))
-        return '\n'.join(lines)
-
-    def set_org(self, org):
-        self._org = org
-
-
-class RAM(Memory):
-    def __init__(self, bits):
-        self._bytes = bytearray([255] * 2 ** bits)
-        self._org = 0x0000
-
-    def __setitem__(self, index, byte):
-        self._bytes[index - self._org] = byte % 256
-
-
-class ROM(Memory):
-    def __init__(self, rom_file):
-        with open(rom_file, "rb") as file:
-            self._bytes = bytearray(file.read())
-        self._org = 0x0000
-
-    def __setitem__(self, index, byte):
-        pass
-
-
-class Memory64(Memory):
-    def __init__(self, ram, rom):
-        self._orgs = [(ram._org, ram._org + len(ram) - 1, ram),
-                      (rom._org, rom._org + len(rom) - 1, rom)]
-        self._orgs.sort()
-        for i in range(len(self._orgs) - 1):
-            if self._orgs[i][1] >= self._orgs[i + 1][0]:
-                raise ValueError("wrong value encountered for memory map.")
-        if self._orgs[-1][1] >= 65536:
-            raise ValueError("memory map too big for 64k.")
-
-    def __getitem__(self, index):
-        for i in range(len(self._orgs)):
-            if self._orgs[i][0] <= index <= self._orgs[i][1]:
-                return self._orgs[i][-1][index]
-
-    def __setitem__(self, index, byte):
-        for i in range(len(self._orgs)):
-            if self._orgs[i][0] <= index <= self._orgs[i][1]:
-                self._orgs[i][-1][index] = byte % 256
-                break
-
-
-def main():
+@curses_wrapper
+def main(stdscr):
     parser = argparse.ArgumentParser("parser to help the architecture of the 6502-based machine.")
 
     parser.add_argument("--ram-bits", "-rb", default=15,
@@ -225,10 +48,15 @@ def main():
     circuit = Circuit(pins, cpu, ram, rom)
     cpu.attach_circuit(circuit)
 
+    curses.curs_set(0)
+    stdscr.nodelay(1)
+
+    circuit.flip(stdscr)
+
     # collect events until released.
     with keyboard.Listener(
-            on_press=cpu_wrapper(on_press, cpu, circuit),
-            on_release=cpu_wrapper(on_release, cpu, circuit)) as listener:
+            on_press=cpu_wrapper(on_press, stdscr, circuit),
+            on_release=cpu_wrapper(on_release, stdscr, circuit)) as listener:
         listener.join()
 
 
