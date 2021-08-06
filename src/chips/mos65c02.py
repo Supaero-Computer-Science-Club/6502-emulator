@@ -2766,9 +2766,9 @@ class M65C02:
                  f" IR: {to_hex(self._IR>>3, 2)} {to_bin(self._IR&7, 3)}",
                  f"BRK: {to_bin(self._brk_flags, 3)}"
                 ]
-        stdscr.addstr(y, x, "65C02")
+        stdscr.addstr(y, x+14, "65C02")
         for row, line in enumerate(lines):
-            stdscr.addstr(y+1 + row, x, line)
+            stdscr.addstr(y+1 + row, x+12, line)
 
         lines = [
                                                         "  +-----------------+  ",
@@ -2795,7 +2795,7 @@ class M65C02:
                                                         "  +-----------------+  "
                 ]
         for row, line in enumerate(lines):
-            stdscr.addstr(y+1 + row, x+15, line)
+            stdscr.addstr(y+11 + row, x+5, line)
 
 
 if __name__ == "__main__":

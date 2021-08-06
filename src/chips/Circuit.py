@@ -42,6 +42,6 @@ class Circuit:
             stdscr.addstr(row, 0, line)
 
         self.cpu.flip(stdscr, 0, 10)
-        self.ram.flip(stdscr, 23, 45)
-        self.rom.flip(stdscr, 23, 125)
+        self.ram.flip(stdscr, 0, 46)
+        self.rom.flip(stdscr, 0, 125)
         stdscr.refresh()
