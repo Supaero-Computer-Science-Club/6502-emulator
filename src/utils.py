@@ -37,6 +37,9 @@ def to_bin(number, nb_bits=8):
 def to_hex(number, nb_chars=2):
     return hex(number)[2:][::-1].ljust(nb_chars, '0')[::-1]
 
+def neg(v, b=8):
+    return v^((1<<b)-1)
+
 
 def string_pins(pins):
     bin_pins = to_bin(pins, 40)

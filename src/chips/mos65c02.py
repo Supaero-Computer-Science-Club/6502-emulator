@@ -1,6 +1,7 @@
 from utils import to_bin
 from utils import to_hex
 from utils import print_pins
+from utils import neg
 
 from chips.pins import *
 
@@ -78,6 +79,30 @@ class M65C02:
         """ set N and Z flags depending on value. """
         self._P=(self._P&((M65C02_NF|M65C02_ZF)^((1<<8)-1)))|((v&M65C02_NF) if (v&0xff) else (M65C02_ZF))
 
+    def _INA(self):
+        """ increment the accumulator. """
+        self._A=(self._A+1)%256
+
+    def _DEA(self):
+        """ decrement the accumulator. """
+        self._A=(self._A-1)%256
+
+    def _INX(self):
+        """ increment the X register. """
+        self._X=(self._X+1)%256
+
+    def _DEX(self):
+        """ decrement the X register. """
+        self._X=(self._X-1)%256
+
+    def _INY(self):
+        """ increment the Y register. """
+        self._Y=(self._Y+1)%256
+
+    def _DEY(self):
+        """ decrement the Y register. """
+        self._Y=(self._Y-1)%256
+
     def _INS(self):
         """ increment the stack pointer. """
         self._S=(self._S+1)%256
@@ -101,7 +126,6 @@ class M65C02:
     def _DECPC(self):
         """ decrement the Program Counter. """
         self._PC=(self._PC-1)%65536
-
 
     def tick(self, pins):
         if (not (self._PINS & M65C02_PHI2) and (pins & M65C02_PHI2)):  # ((pins & M65C02_PHI2) & ((M65C02_PHI2 & self._PINS) ^ ((1<< 40) - 1))):
@@ -403,8 +427,8 @@ class M65C02:
             elif (self._IR == (0x17<<3|7)): assert(False);
 
             # CLC-i
-            elif (self._IR == (0x18<<3|0)): assert(False);
-            elif (self._IR == (0x18<<3|1)): assert(False);
+            elif (self._IR == (0x18<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x18<<3|1)): self._P&=neg(M65C02_CF);self._FETCH();
             elif (self._IR == (0x18<<3|2)): assert(False);
             elif (self._IR == (0x18<<3|3)): assert(False);
             elif (self._IR == (0x18<<3|4)): assert(False);
@@ -727,8 +751,8 @@ class M65C02:
             elif (self._IR == (0x37<<3|7)): assert(False);
 
             # SEC-I
-            elif (self._IR == (0x38<<3|0)): assert(False);
-            elif (self._IR == (0x38<<3|1)): assert(False);
+            elif (self._IR == (0x38<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x38<<3|1)): self._P|=M65C02_CF;self._FETCH();
             elif (self._IR == (0x38<<3|2)): assert(False);
             elif (self._IR == (0x38<<3|3)): assert(False);
             elif (self._IR == (0x38<<3|4)): assert(False);
@@ -1051,8 +1075,8 @@ class M65C02:
             elif (self._IR == (0x57<<3|7)): assert(False);
 
             # CLI-i
-            elif (self._IR == (0x58<<3|0)): assert(False);
-            elif (self._IR == (0x58<<3|1)): assert(False);
+            elif (self._IR == (0x58<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x58<<3|1)): self._P&=neg(M65C02_IF);self._FETCH();
             elif (self._IR == (0x58<<3|2)): assert(False);
             elif (self._IR == (0x58<<3|3)): assert(False);
             elif (self._IR == (0x58<<3|4)): assert(False);
@@ -1375,8 +1399,8 @@ class M65C02:
             elif (self._IR == (0x77<<3|7)): assert(False);
 
             # SEI-i
-            elif (self._IR == (0x78<<3|0)): assert(False);
-            elif (self._IR == (0x78<<3|1)): assert(False);
+            elif (self._IR == (0x78<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x78<<3|1)): self._P|=M65C02_IF;self._FETCH();
             elif (self._IR == (0x78<<3|2)): assert(False);
             elif (self._IR == (0x78<<3|3)): assert(False);
             elif (self._IR == (0x78<<3|4)): assert(False);
@@ -1537,8 +1561,8 @@ class M65C02:
             elif (self._IR == (0x87<<3|7)): assert(False);
 
             # DEY-i
-            elif (self._IR == (0x88<<3|0)): assert(False);
-            elif (self._IR == (0x88<<3|1)): assert(False);
+            elif (self._IR == (0x88<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x88<<3|1)): self._DEY();_NZ(self._Y);self._FETCH();
             elif (self._IR == (0x88<<3|2)): assert(False);
             elif (self._IR == (0x88<<3|3)): assert(False);
             elif (self._IR == (0x88<<3|4)): assert(False);
@@ -1557,8 +1581,8 @@ class M65C02:
             elif (self._IR == (0x89<<3|7)): assert(False);
 
             # TXA-i
-            elif (self._IR == (0x8a<<3|0)): assert(False);
-            elif (self._IR == (0x8a<<3|1)): assert(False);
+            elif (self._IR == (0x8a<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x8a<<3|1)): self._A=self._X;_NZ(self._A);self._FETCH();
             elif (self._IR == (0x8a<<3|2)): assert(False);
             elif (self._IR == (0x8a<<3|3)): assert(False);
             elif (self._IR == (0x8a<<3|4)): assert(False);
@@ -1699,8 +1723,8 @@ class M65C02:
             elif (self._IR == (0x97<<3|7)): assert(False);
 
             # TYA-i
-            elif (self._IR == (0x98<<3|0)): assert(False);
-            elif (self._IR == (0x98<<3|1)): assert(False);
+            elif (self._IR == (0x98<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x98<<3|1)): self._A=self._Y;_NZ(self._A);self._FETCH();
             elif (self._IR == (0x98<<3|2)): assert(False);
             elif (self._IR == (0x98<<3|3)): assert(False);
             elif (self._IR == (0x98<<3|4)): assert(False);
@@ -1719,8 +1743,8 @@ class M65C02:
             elif (self._IR == (0x99<<3|7)): assert(False);
 
             # TXS-i
-            elif (self._IR == (0x9a<<3|0)): assert(False);
-            elif (self._IR == (0x9a<<3|1)): assert(False);
+            elif (self._IR == (0x9a<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0x9a<<3|1)): self._S=self._X;self._FETCH();
             elif (self._IR == (0x9a<<3|2)): assert(False);
             elif (self._IR == (0x9a<<3|3)): assert(False);
             elif (self._IR == (0x9a<<3|4)): assert(False);
@@ -1861,8 +1885,8 @@ class M65C02:
             elif (self._IR == (0xa7<<3|7)): assert(False);
 
             # TAY-i
-            elif (self._IR == (0xa8<<3|0)): assert(False);
-            elif (self._IR == (0xa8<<3|1)): assert(False);
+            elif (self._IR == (0xa8<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xa8<<3|1)): self._Y=self._A;_NZ(self._Y);self._FETCH();
             elif (self._IR == (0xa8<<3|2)): assert(False);
             elif (self._IR == (0xa8<<3|3)): assert(False);
             elif (self._IR == (0xa8<<3|4)): assert(False);
@@ -1881,8 +1905,8 @@ class M65C02:
             elif (self._IR == (0xa9<<3|7)): assert(False);
 
             # TAX-i
-            elif (self._IR == (0xaa<<3|0)): assert(False);
-            elif (self._IR == (0xaa<<3|1)): assert(False);
+            elif (self._IR == (0xaa<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xaa<<3|1)): self._X=self._A;_NZ(self._X);self._FETCH();
             elif (self._IR == (0xaa<<3|2)): assert(False);
             elif (self._IR == (0xaa<<3|3)): assert(False);
             elif (self._IR == (0xaa<<3|4)): assert(False);
@@ -2023,8 +2047,8 @@ class M65C02:
             elif (self._IR == (0xb7<<3|7)): assert(False);
 
             # CLV-i
-            elif (self._IR == (0xb8<<3|0)): assert(False);
-            elif (self._IR == (0xb8<<3|1)): assert(False);
+            elif (self._IR == (0xb8<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xb8<<3|1)): self._P&=neg(M65C02_VF);self._FETCH();
             elif (self._IR == (0xb8<<3|2)): assert(False);
             elif (self._IR == (0xb8<<3|3)): assert(False);
             elif (self._IR == (0xb8<<3|4)): assert(False);
@@ -2043,8 +2067,8 @@ class M65C02:
             elif (self._IR == (0xb9<<3|7)): assert(False);
 
             # TSX-i
-            elif (self._IR == (0xba<<3|0)): assert(False);
-            elif (self._IR == (0xba<<3|1)): assert(False);
+            elif (self._IR == (0xba<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xba<<3|1)): self._X=self._S;_NZ(self._X);self._FETCH();
             elif (self._IR == (0xba<<3|2)): assert(False);
             elif (self._IR == (0xba<<3|3)): assert(False);
             elif (self._IR == (0xba<<3|4)): assert(False);
@@ -2185,8 +2209,8 @@ class M65C02:
             elif (self._IR == (0xc7<<3|7)): assert(False);
 
             # INY-i
-            elif (self._IR == (0xc8<<3|0)): assert(False);
-            elif (self._IR == (0xc8<<3|1)): assert(False);
+            elif (self._IR == (0xc8<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xc8<<3|1)): self._INY();_NZ(self._Y);self._FETCH();
             elif (self._IR == (0xc8<<3|2)): assert(False);
             elif (self._IR == (0xc8<<3|3)): assert(False);
             elif (self._IR == (0xc8<<3|4)): assert(False);
@@ -2205,8 +2229,8 @@ class M65C02:
             elif (self._IR == (0xc9<<3|7)): assert(False);
 
             # DEX-i
-            elif (self._IR == (0xca<<3|0)): assert(False);
-            elif (self._IR == (0xca<<3|1)): assert(False);
+            elif (self._IR == (0xca<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xca<<3|1)): self._DEX();_NZ(self._X);self._FETCH();
             elif (self._IR == (0xca<<3|2)): assert(False);
             elif (self._IR == (0xca<<3|3)): assert(False);
             elif (self._IR == (0xca<<3|4)): assert(False);
@@ -2347,8 +2371,8 @@ class M65C02:
             elif (self._IR == (0xd7<<3|7)): assert(False);
 
             # CLD-i
-            elif (self._IR == (0xd8<<3|0)): assert(False);
-            elif (self._IR == (0xd8<<3|1)): assert(False);
+            elif (self._IR == (0xd8<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xd8<<3|1)): self._P&=neg(M65C02_DF);self._FETCH();
             elif (self._IR == (0xd8<<3|2)): assert(False);
             elif (self._IR == (0xd8<<3|3)): assert(False);
             elif (self._IR == (0xd8<<3|4)): assert(False);
@@ -2509,8 +2533,8 @@ class M65C02:
             elif (self._IR == (0xe7<<3|7)): assert(False);
 
             # INX-i
-            elif (self._IR == (0xe8<<3|0)): assert(False);
-            elif (self._IR == (0xe8<<3|1)): assert(False);
+            elif (self._IR == (0xe8<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xe8<<3|1)): self._INX();_NZ(self._X);self._FETCH();
             elif (self._IR == (0xe8<<3|2)): assert(False);
             elif (self._IR == (0xe8<<3|3)): assert(False);
             elif (self._IR == (0xe8<<3|4)): assert(False);
@@ -2671,8 +2695,8 @@ class M65C02:
             elif (self._IR == (0xf7<<3|7)): assert(False);
 
             # SED-i
-            elif (self._IR == (0xf8<<3|0)): assert(False);
-            elif (self._IR == (0xf8<<3|1)): assert(False);
+            elif (self._IR == (0xf8<<3|0)): self._SA(self._PC);
+            elif (self._IR == (0xf8<<3|1)): self._P|=M65C02_DF;self._FETCH();
             elif (self._IR == (0xf8<<3|2)): assert(False);
             elif (self._IR == (0xf8<<3|3)): assert(False);
             elif (self._IR == (0xf8<<3|4)): assert(False);
