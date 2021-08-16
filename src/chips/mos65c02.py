@@ -1349,11 +1349,11 @@ class M65C02:
             elif (self._IR == (0x6b<<3|7)): assert(False);
 
             # JMP (a)
-            elif (self._IR == (0x6c<<3|0)): assert(False);
-            elif (self._IR == (0x6c<<3|1)): assert(False);
-            elif (self._IR == (0x6c<<3|2)): assert(False);
-            elif (self._IR == (0x6c<<3|3)): assert(False);
-            elif (self._IR == (0x6c<<3|4)): assert(False);
+            elif (self._IR == (0x6c<<3|0)): _SA(c->PC)self._INCPC();;break;
+            elif (self._IR == (0x6c<<3|1)): _SA(c->PC)self._INCPC();;c->AD=_GD();break;
+            elif (self._IR == (0x6c<<3|2)): c->AD|=_GD()<<8;_SA(c->AD);break;
+            elif (self._IR == (0x6c<<3|3)): _SA((c->AD&0xFF00)|((c->AD+1)&0x00FF));c->AD=_GD();break;
+            elif (self._IR == (0x6c<<3|4)): c->PC=(_GD()<<8)|c->AD;_FETCH();break;
             elif (self._IR == (0x6c<<3|5)): assert(False);
             elif (self._IR == (0x6c<<3|6)): assert(False);
             elif (self._IR == (0x6c<<3|7)): assert(False);
@@ -1511,12 +1511,12 @@ class M65C02:
             elif (self._IR == (0x7b<<3|7)): assert(False);
 
             # JMP (a,x)
-            elif (self._IR == (0x7c<<3|0)): assert(False);
-            elif (self._IR == (0x7c<<3|1)): assert(False);
-            elif (self._IR == (0x7c<<3|2)): assert(False);
-            elif (self._IR == (0x7c<<3|3)): assert(False);
-            elif (self._IR == (0x7c<<3|4)): assert(False);
-            elif (self._IR == (0x7c<<3|5)): assert(False);
+            elif (self._IR == (0x7c<<3|0)): _SA(c->PC)self._INCPC();;break;
+            elif (self._IR == (0x7c<<3|1)): _SA(c->PC)self._INCPC();;c->AD=_GD();break;
+            elif (self._IR == (0x7c<<3|2)): c->AD|=_GD()<<8;_SA(c->AD);break;
+            elif (self._IR == (0x7c<<3|3)): self._AD+=self._X;
+            elif (self._IR == (0x7c<<3|4)): _SA((c->AD&0xFF00)|((c->AD+1)&0x00FF));c->AD=_GD();break;
+            elif (self._IR == (0x7c<<3|5)): c->PC=(_GD()<<8)|c->AD;_FETCH();break;
             elif (self._IR == (0x7c<<3|6)): assert(False);
             elif (self._IR == (0x7c<<3|7)): assert(False);
 
