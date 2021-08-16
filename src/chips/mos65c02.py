@@ -357,8 +357,8 @@ class M65C02:
             elif (self._IR == (0x09<<3|7)): assert(False);
 
             # ASL A
-            elif (self._IR == (0x0a<<3|0)): assert(False);
-            elif (self._IR == (0x0a<<3|1)): assert(False);
+            elif (self._IR == (0x0a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x0a<<3|1)): c->A=_m6502_asl(c->A);_FETCH();break;
             elif (self._IR == (0x0a<<3|2)): assert(False);
             elif (self._IR == (0x0a<<3|3)): assert(False);
             elif (self._IR == (0x0a<<3|4)): assert(False);
@@ -519,8 +519,8 @@ class M65C02:
             elif (self._IR == (0x19<<3|7)): assert(False);
 
             # INC A
-            elif (self._IR == (0x1a<<3|0)): assert(False);
-            elif (self._IR == (0x1a<<3|1)): assert(False);
+            elif (self._IR == (0x1a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x1a<<3|1)): self._INA();_FETCH();break;
             elif (self._IR == (0x1a<<3|2)): assert(False);
             elif (self._IR == (0x1a<<3|3)): assert(False);
             elif (self._IR == (0x1a<<3|4)): assert(False);
@@ -681,8 +681,8 @@ class M65C02:
             elif (self._IR == (0x29<<3|7)): assert(False);
 
             # ROL A
-            elif (self._IR == (0x2a<<3|0)): assert(False);
-            elif (self._IR == (0x2a<<3|1)): assert(False);
+            elif (self._IR == (0x2a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x2a<<3|1)): c->A=_m6502_rol(c->A);_FETCH();break;
             elif (self._IR == (0x2a<<3|2)): assert(False);
             elif (self._IR == (0x2a<<3|3)): assert(False);
             elif (self._IR == (0x2a<<3|4)): assert(False);
@@ -843,8 +843,8 @@ class M65C02:
             elif (self._IR == (0x39<<3|7)): assert(False);
 
             # DEC A
-            elif (self._IR == (0x3a<<3|0)): assert(False);
-            elif (self._IR == (0x3a<<3|1)): assert(False);
+            elif (self._IR == (0x3a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x3a<<3|1)): self._DEA();_FETCH();break;
             elif (self._IR == (0x3a<<3|2)): assert(False);
             elif (self._IR == (0x3a<<3|3)): assert(False);
             elif (self._IR == (0x3a<<3|4)): assert(False);
@@ -1005,8 +1005,8 @@ class M65C02:
             elif (self._IR == (0x49<<3|7)): assert(False);
 
             # LSR A
-            elif (self._IR == (0x4a<<3|0)): assert(False);
-            elif (self._IR == (0x4a<<3|1)): assert(False);
+            elif (self._IR == (0x4a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x4a<<3|1)): c->A=_m6502_lsr(c->A);_FETCH();break;
             elif (self._IR == (0x4a<<3|2)): assert(False);
             elif (self._IR == (0x4a<<3|3)): assert(False);
             elif (self._IR == (0x4a<<3|4)): assert(False);
@@ -1329,8 +1329,8 @@ class M65C02:
             elif (self._IR == (0x69<<3|7)): assert(False);
 
             # ROR A
-            elif (self._IR == (0x6a<<3|0)): assert(False);
-            elif (self._IR == (0x6a<<3|1)): assert(False);
+            elif (self._IR == (0x6a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x6a<<3|1)): c->A=_m6502_ror(c->A);_FETCH();break;
             elif (self._IR == (0x6a<<3|2)): assert(False);
             elif (self._IR == (0x6a<<3|3)): assert(False);
             elif (self._IR == (0x6a<<3|4)): assert(False);
@@ -1997,10 +1997,10 @@ class M65C02:
             elif (self._IR == (0xab<<3|7)): assert(False);
 
             # LDY A
-            elif (self._IR == (0xac<<3|0)): assert(False);
-            elif (self._IR == (0xac<<3|1)): assert(False);
-            elif (self._IR == (0xac<<3|2)): assert(False);
-            elif (self._IR == (0xac<<3|3)): assert(False);
+            elif (self._IR == (0xac<<3|0)): _SA(c->PC);self._INCPC();break;
+            elif (self._IR == (0xac<<3|1)): _SA(c->PC);self._INCPC();c->AD=_GD();break;
+            elif (self._IR == (0xac<<3|2)): _SA((_GD()<<8)|c->AD);break;
+            elif (self._IR == (0xac<<3|3)): c->Y=_GD();_NZ(c->Y);_FETCH();break;
             elif (self._IR == (0xac<<3|4)): assert(False);
             elif (self._IR == (0xac<<3|5)): assert(False);
             elif (self._IR == (0xac<<3|6)): assert(False);
