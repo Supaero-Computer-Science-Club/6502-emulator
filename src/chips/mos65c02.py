@@ -337,9 +337,9 @@ class M65C02:
             elif (self._IR == (0x07<<3|7)): assert(False);
 
             # PHP s
-            elif (self._IR == (0x08<<3|0)): assert(False);
-            elif (self._IR == (0x08<<3|1)): assert(False);
-            elif (self._IR == (0x08<<3|2)): assert(False);
+            elif (self._IR == (0x08<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x08<<3|1)): _SAD(0x0100|c->S,c->P|M6502_XF);self._DES();_WR();break;
+            elif (self._IR == (0x08<<3|2)): _FETCH();break;
             elif (self._IR == (0x08<<3|3)): assert(False);
             elif (self._IR == (0x08<<3|4)): assert(False);
             elif (self._IR == (0x08<<3|5)): assert(False);
@@ -661,10 +661,10 @@ class M65C02:
             elif (self._IR == (0x27<<3|7)): assert(False);
 
             # PLP s
-            elif (self._IR == (0x28<<3|0)): assert(False);
-            elif (self._IR == (0x28<<3|1)): assert(False);
-            elif (self._IR == (0x28<<3|2)): assert(False);
-            elif (self._IR == (0x28<<3|3)): assert(False);
+            elif (self._IR == (0x28<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x28<<3|1)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0x28<<3|2)): _SA(0x0100|c->S);break;
+            elif (self._IR == (0x28<<3|3)): c->P=(_GD()|M6502_BF)&~M6502_XF;_FETCH();break;
             elif (self._IR == (0x28<<3|4)): assert(False);
             elif (self._IR == (0x28<<3|5)): assert(False);
             elif (self._IR == (0x28<<3|6)): assert(False);
@@ -905,12 +905,12 @@ class M65C02:
 
 
             # RTI s
-            elif (self._IR == (0x40<<3|0)): assert(False);
-            elif (self._IR == (0x40<<3|1)): assert(False);
-            elif (self._IR == (0x40<<3|2)): assert(False);
-            elif (self._IR == (0x40<<3|3)): assert(False);
-            elif (self._IR == (0x40<<3|4)): assert(False);
-            elif (self._IR == (0x40<<3|5)): assert(False);
+            elif (self._IR == (0x40<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x40<<3|1)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0x40<<3|2)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0x40<<3|3)): _SA(0x0100|c->S);self._INS();c->P=(_GD()|M6502_BF)&~M6502_XF;break;
+            elif (self._IR == (0x40<<3|4)): _SA(0x0100|c->S);c->AD=_GD();break;
+            elif (self._IR == (0x40<<3|5)): c->PC=(_GD()<<8)|c->AD;_FETCH();break;
             elif (self._IR == (0x40<<3|6)): assert(False);
             elif (self._IR == (0x40<<3|7)): assert(False);
 
@@ -985,9 +985,9 @@ class M65C02:
             elif (self._IR == (0x47<<3|7)): assert(False);
 
             # PHA s
-            elif (self._IR == (0x48<<3|0)): assert(False);
-            elif (self._IR == (0x48<<3|1)): assert(False);
-            elif (self._IR == (0x48<<3|2)): assert(False);
+            elif (self._IR == (0x48<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x48<<3|1)): _SAD(0x0100|c->S,c->A);self._DES();_WR();break;
+            elif (self._IR == (0x48<<3|2)): _FETCH();break;
             elif (self._IR == (0x48<<3|3)): assert(False);
             elif (self._IR == (0x48<<3|4)): assert(False);
             elif (self._IR == (0x48<<3|5)): assert(False);
@@ -1167,9 +1167,9 @@ class M65C02:
             elif (self._IR == (0x59<<3|7)): assert(False);
 
             # PHY s
-            elif (self._IR == (0x5a<<3|0)): assert(False);
-            elif (self._IR == (0x5a<<3|1)): assert(False);
-            elif (self._IR == (0x5a<<3|2)): assert(False);
+            elif (self._IR == (0x5a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x5a<<3|1)): _SAD(0x0100|c->S,c->Y);self._DES();_WR();break;
+            elif (self._IR == (0x5a<<3|2)): _FETCH();break;
             elif (self._IR == (0x5a<<3|3)): assert(False);
             elif (self._IR == (0x5a<<3|4)): assert(False);
             elif (self._IR == (0x5a<<3|5)): assert(False);
@@ -1229,12 +1229,12 @@ class M65C02:
 
 
             # RTS s
-            elif (self._IR == (0x60<<3|0)): assert(False);
-            elif (self._IR == (0x60<<3|1)): assert(False);
-            elif (self._IR == (0x60<<3|2)): assert(False);
-            elif (self._IR == (0x60<<3|3)): assert(False);
-            elif (self._IR == (0x60<<3|4)): assert(False);
-            elif (self._IR == (0x60<<3|5)): assert(False);
+            elif (self._IR == (0x60<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x60<<3|1)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0x60<<3|2)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0x60<<3|3)): _SA(0x0100|c->S);c->AD=_GD();break;
+            elif (self._IR == (0x60<<3|4)): c->PC=(_GD()<<8)|c->AD;_SA(c->PC);self._INCPC();break;
+            elif (self._IR == (0x60<<3|5)): _FETCH();break;
             elif (self._IR == (0x60<<3|6)): assert(False);
             elif (self._IR == (0x60<<3|7)): assert(False);
 
@@ -1309,10 +1309,10 @@ class M65C02:
             elif (self._IR == (0x67<<3|7)): assert(False);
 
             # PLA s
-            elif (self._IR == (0x68<<3|0)): assert(False);
-            elif (self._IR == (0x68<<3|1)): assert(False);
-            elif (self._IR == (0x68<<3|2)): assert(False);
-            elif (self._IR == (0x68<<3|3)): assert(False);
+            elif (self._IR == (0x68<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x68<<3|1)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0x68<<3|2)): _SA(0x0100|c->S);break;
+            elif (self._IR == (0x68<<3|3)): c->A=_GD();_NZ(c->A);_FETCH();break;
             elif (self._IR == (0x68<<3|4)): assert(False);
             elif (self._IR == (0x68<<3|5)): assert(False);
             elif (self._IR == (0x68<<3|6)): assert(False);
@@ -1491,10 +1491,10 @@ class M65C02:
             elif (self._IR == (0x79<<3|7)): assert(False);
 
             # PLY s
-            elif (self._IR == (0x7a<<3|0)): assert(False);
-            elif (self._IR == (0x7a<<3|1)): assert(False);
-            elif (self._IR == (0x7a<<3|2)): assert(False);
-            elif (self._IR == (0x7a<<3|3)): assert(False);
+            elif (self._IR == (0x7a<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0x7a<<3|1)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0x7a<<3|2)): _SA(0x0100|c->S);break;
+            elif (self._IR == (0x7a<<3|3)): c->Y=_GD();_NZ(c->Y);_FETCH();break;
             elif (self._IR == (0x7a<<3|4)): assert(False);
             elif (self._IR == (0x7a<<3|5)): assert(False);
             elif (self._IR == (0x7a<<3|6)): assert(False);
@@ -2463,9 +2463,9 @@ class M65C02:
             elif (self._IR == (0xd9<<3|7)): assert(False);
 
             # PHX s
-            elif (self._IR == (0xda<<3|0)): assert(False);
-            elif (self._IR == (0xda<<3|1)): assert(False);
-            elif (self._IR == (0xda<<3|2)): assert(False);
+            elif (self._IR == (0xda<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0xda<<3|1)): _SAD(0x0100|c->S,c->X);self._DES();_WR();break;
+            elif (self._IR == (0xda<<3|2)): _FETCH();break;
             elif (self._IR == (0xda<<3|3)): assert(False);
             elif (self._IR == (0xda<<3|4)): assert(False);
             elif (self._IR == (0xda<<3|5)): assert(False);
@@ -2787,10 +2787,10 @@ class M65C02:
             elif (self._IR == (0xf9<<3|7)): assert(False);
 
             # PLX s
-            elif (self._IR == (0xfa<<3|0)): assert(False);
-            elif (self._IR == (0xfa<<3|1)): assert(False);
-            elif (self._IR == (0xfa<<3|2)): assert(False);
-            elif (self._IR == (0xfa<<3|3)): assert(False);
+            elif (self._IR == (0xfa<<3|0)): _SA(c->PC);break;
+            elif (self._IR == (0xfa<<3|1)): _SA(0x0100|c->S);self._INS();break;
+            elif (self._IR == (0xfa<<3|2)): _SA(0x0100|c->S);break;
+            elif (self._IR == (0xfa<<3|3)): c->X=_GD();_NZ(c->X);_FETCH();break;
             elif (self._IR == (0xfa<<3|4)): assert(False);
             elif (self._IR == (0xfa<<3|5)): assert(False);
             elif (self._IR == (0xfa<<3|6)): assert(False);
