@@ -576,7 +576,11 @@ class M65C02:
             elif (self._IR == (0x1e<<3|7)): assert(False);
 
             # BBR1 r
-            elif (self._IR == (0x1f<<3|0)): assert(False);
+            elif (self._IR == (0x1f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x1f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x02)==0x00):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x1f<<3|1)): assert(False);
             elif (self._IR == (0x1f<<3|2)): assert(False);
             elif (self._IR == (0x1f<<3|3)): assert(False);
@@ -738,8 +742,11 @@ class M65C02:
             elif (self._IR == (0x2e<<3|7)): assert(False);
 
             # BBR2 r
-            elif (self._IR == (0x2f<<3|0)): assert(False);
-            elif (self._IR == (0x2f<<3|1)): assert(False);
+            elif (self._IR == (0x2f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x2f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x04)==0x00):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x2f<<3|2)): assert(False);
             elif (self._IR == (0x2f<<3|3)): assert(False);
             elif (self._IR == (0x2f<<3|4)): assert(False);
@@ -904,6 +911,11 @@ class M65C02:
             elif (self._IR == (0x3e<<3|7)): assert(False);
 
             # BBR3 r
+            elif (self._IR == (0x3f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x3f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x08)==0x00):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x3f<<3|0)): assert(False);
             elif (self._IR == (0x3f<<3|1)): assert(False);
             elif (self._IR == (0x3f<<3|2)): assert(False);
@@ -1066,6 +1078,11 @@ class M65C02:
             elif (self._IR == (0x4e<<3|7)): assert(False);
 
             # BBR4 r
+            elif (self._IR == (0x4f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x4f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x10)==0x00):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x4f<<3|0)): assert(False);
             elif (self._IR == (0x4f<<3|1)): assert(False);
             elif (self._IR == (0x4f<<3|2)): assert(False);
@@ -1232,6 +1249,11 @@ class M65C02:
             elif (self._IR == (0x5e<<3|7)): assert(False);
 
             # BBR5 r
+            elif (self._IR == (0x5f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x5f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x20)==0x00):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x5f<<3|0)): assert(False);
             elif (self._IR == (0x5f<<3|1)): assert(False);
             elif (self._IR == (0x5f<<3|2)): assert(False);
@@ -1394,8 +1416,11 @@ class M65C02:
             elif (self._IR == (0x6e<<3|7)): assert(False);
 
             # BBR6 r
-            elif (self._IR == (0x6f<<3|0)): assert(False);
-            elif (self._IR == (0x6f<<3|1)): assert(False);
+            elif (self._IR == (0x6f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x6f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x40)==0x00):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x6f<<3|2)): assert(False);
             elif (self._IR == (0x6f<<3|3)): assert(False);
             elif (self._IR == (0x6f<<3|4)): assert(False);
@@ -1560,8 +1585,11 @@ class M65C02:
             elif (self._IR == (0x7e<<3|7)): assert(False);
 
             # BBR7 r
-            elif (self._IR == (0x7f<<3|0)): assert(False);
-            elif (self._IR == (0x7f<<3|1)): assert(False);
+            elif (self._IR == (0x7f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x7f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x80)==0x00):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x7f<<3|2)): assert(False);
             elif (self._IR == (0x7f<<3|3)): assert(False);
             elif (self._IR == (0x7f<<3|4)): assert(False);
@@ -1724,8 +1752,11 @@ class M65C02:
             elif (self._IR == (0x8e<<3|7)): assert(False);
 
             # BBS0 r
-            elif (self._IR == (0x8f<<3|0)): assert(False);
-            elif (self._IR == (0x8f<<3|1)): assert(False);
+            elif (self._IR == (0x8f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x8f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x01)==0x01):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x8f<<3|2)): assert(False);
             elif (self._IR == (0x8f<<3|3)): assert(False);
             elif (self._IR == (0x8f<<3|4)): assert(False);
@@ -1890,8 +1921,11 @@ class M65C02:
             elif (self._IR == (0x9e<<3|7)): assert(False);
 
             # BBS1 r
-            elif (self._IR == (0x9f<<3|0)): assert(False);
-            elif (self._IR == (0x9f<<3|1)): assert(False);
+            elif (self._IR == (0x9f<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x9f<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x02)==0x02):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0x9f<<3|2)): assert(False);
             elif (self._IR == (0x9f<<3|3)): assert(False);
             elif (self._IR == (0x9f<<3|4)): assert(False);
@@ -2052,8 +2086,11 @@ class M65C02:
             elif (self._IR == (0xae<<3|7)): assert(False);
 
             # BBS2 r
-            elif (self._IR == (0xaf<<3|0)): assert(False);
-            elif (self._IR == (0xaf<<3|1)): assert(False);
+            elif (self._IR == (0xaf<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0xaf<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x04)==0x04):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0xaf<<3|2)): assert(False);
             elif (self._IR == (0xaf<<3|3)): assert(False);
             elif (self._IR == (0xaf<<3|4)): assert(False);
@@ -2218,8 +2255,11 @@ class M65C02:
             elif (self._IR == (0xbe<<3|7)): assert(False);
 
             # BBS3 r
-            elif (self._IR == (0xbf<<3|0)): assert(False);
-            elif (self._IR == (0xbf<<3|1)): assert(False);
+            elif (self._IR == (0xbf<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0xbf<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x08)==0x08):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0xbf<<3|2)): assert(False);
             elif (self._IR == (0xbf<<3|3)): assert(False);
             elif (self._IR == (0xbf<<3|4)): assert(False);
@@ -2380,8 +2420,11 @@ class M65C02:
             elif (self._IR == (0xce<<3|7)): assert(False);
 
             # BBS4 r
-            elif (self._IR == (0xcf<<3|0)): assert(False);
-            elif (self._IR == (0xcf<<3|1)): assert(False);
+            elif (self._IR == (0xcf<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0xcf<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x10)==0x10):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0xcf<<3|2)): assert(False);
             elif (self._IR == (0xcf<<3|3)): assert(False);
             elif (self._IR == (0xcf<<3|4)): assert(False);
@@ -2546,8 +2589,11 @@ class M65C02:
             elif (self._IR == (0xde<<3|7)): assert(False);
 
             # BBS5 r
-            elif (self._IR == (0xdf<<3|0)): assert(False);
-            elif (self._IR == (0xdf<<3|1)): assert(False);
+            elif (self._IR == (0xdf<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0xdf<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x20)==0x20):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0xdf<<3|2)): assert(False);
             elif (self._IR == (0xdf<<3|3)): assert(False);
             elif (self._IR == (0xdf<<3|4)): assert(False);
@@ -2708,8 +2754,11 @@ class M65C02:
             elif (self._IR == (0xee<<3|7)): assert(False);
 
             # BBS6 r
-            elif (self._IR == (0xef<<3|0)): assert(False);
-            elif (self._IR == (0xef<<3|1)): assert(False);
+            elif (self._IR == (0xef<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0xef<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x40)==0x40):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0xef<<3|2)): assert(False);
             elif (self._IR == (0xef<<3|3)): assert(False);
             elif (self._IR == (0xef<<3|4)): assert(False);
@@ -2874,8 +2923,11 @@ class M65C02:
             elif (self._IR == (0xfe<<3|7)): assert(False);
 
             # BBS7 r
-            elif (self._IR == (0xff<<3|0)): assert(False);
-            elif (self._IR == (0xff<<3|1)): assert(False);
+            elif (self._IR == (0xff<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0xff<<3|1)):
+                self._SA(self._PC);
+                if((self._GD()&0x80)==0x80):self._INCPC();self._AD=self._PC+self._GD();self._FETCH();
+                else:self._FETCH();
             elif (self._IR == (0xff<<3|2)): assert(False);
             elif (self._IR == (0xff<<3|3)): assert(False);
             elif (self._IR == (0xff<<3|4)): assert(False);
