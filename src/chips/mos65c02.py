@@ -1306,9 +1306,9 @@ class M65C02:
             elif (self._IR == (0x63<<3|7)): assert(False);
 
             # STZ zp
-            elif (self._IR == (0x64<<3|0)): assert(False);
-            elif (self._IR == (0x64<<3|1)): assert(False);
-            elif (self._IR == (0x64<<3|2)): assert(False);
+            elif (self._IR == (0x64<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x64<<3|1)): self._SA(self._GD());self._SD(0x00);self._WR();
+            elif (self._IR == (0x64<<3|2)): self._FETCH();
             elif (self._IR == (0x64<<3|3)): assert(False);
             elif (self._IR == (0x64<<3|4)): assert(False);
             elif (self._IR == (0x64<<3|5)): assert(False);
