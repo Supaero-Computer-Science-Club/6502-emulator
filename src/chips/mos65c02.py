@@ -1616,7 +1616,7 @@ class M65C02:
             elif (self._IR == (0x81<<3|1)): self._AD=self._GD();self._SA(self._AD);
             elif (self._IR == (0x81<<3|2)): self._AD=(self._AD+self._X)&0xFF;self._SA(self._AD);
             elif (self._IR == (0x81<<3|3)): self._SA((self._AD+1)&0xFF);self._AD=self._GD();
-            elif (self._IR == (0x81<<3|4)): self._SA((self._GD()<<8)|self._AD);_SD(self._A);self._WR();
+            elif (self._IR == (0x81<<3|4)): self._SA((self._GD()<<8)|self._AD);self._SD(self._A);self._WR();
             elif (self._IR == (0x81<<3|5)): self._FETCH();
             elif (self._IR == (0x81<<3|6)): assert(False);
             elif (self._IR == (0x81<<3|7)): assert(False);
@@ -1831,10 +1831,10 @@ class M65C02:
             elif (self._IR == (0x95<<3|7)): assert(False);
 
             # STX zp,y
-            elif (self._IR == (0x96<<3|0)): assert(False);
-            elif (self._IR == (0x96<<3|1)): assert(False);
-            elif (self._IR == (0x96<<3|2)): assert(False);
-            elif (self._IR == (0x96<<3|3)): assert(False);
+            elif (self._IR == (0x96<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0x96<<3|1)): self._AD=self._GD();self._SA(self._AD);
+            elif (self._IR == (0x96<<3|2)): self._SA((self._AD+self._Y)&0x00FF);self._SD(self._X);self._WR();
+            elif (self._IR == (0x96<<3|3)): self._FETCH();
             elif (self._IR == (0x96<<3|4)): assert(False);
             elif (self._IR == (0x96<<3|5)): assert(False);
             elif (self._IR == (0x96<<3|6)): assert(False);
@@ -2165,10 +2165,10 @@ class M65C02:
             elif (self._IR == (0xb5<<3|7)): assert(False);
 
             # LDX zp,y
-            elif (self._IR == (0xb6<<3|0)): assert(False);
-            elif (self._IR == (0xb6<<3|1)): assert(False);
-            elif (self._IR == (0xb6<<3|2)): assert(False);
-            elif (self._IR == (0xb6<<3|3)): assert(False);
+            elif (self._IR == (0xb6<<3|0)): self._SA(self._PC);self._INCPC();
+            elif (self._IR == (0xb6<<3|1)): self._AD=self._GD();self._SA(self._AD);
+            elif (self._IR == (0xb6<<3|2)): self._SA((self._AD+self._Y)&0x00FF);
+            elif (self._IR == (0xb6<<3|3)): self._X=self._GD();_NZ(self._X);self._FETCH();
             elif (self._IR == (0xb6<<3|4)): assert(False);
             elif (self._IR == (0xb6<<3|5)): assert(False);
             elif (self._IR == (0xb6<<3|6)): assert(False);

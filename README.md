@@ -12,9 +12,9 @@
 | 6 | X | X |   |   | X | X | X | X | X | X | X |   | X | X | X | X | 6 |
 | 7 | X | - | - |   | - | - | - | X | X | X | X |   | X | X | X | X | 7 |
 | 8 | X | X |   |   | X | X | X | X | X | X | X |   | X | X | X | X | 8 |
-| 9 | X | - | - |   | - | - | - | X | X | X | X |   | X | X | X | X | 9 |
+| 9 | X | - | - |   | - | - | X | X | X | X | X |   | X | X | X | X | 9 |
 | a | X | X | X |   | X | X | X | X | X | X | X |   | X | X | X | X | a |
-| b | X | - | - |   | - | - | - | X | X | X | X |   | X | X | X | X | b |
+| b | X | - | - |   | - | - | X | X | X | X | X |   | X | X | X | X | b |
 | c | X | X |   |   | X | X | X | X | X | X | X | - | X | X | X | X | c |
 | d | X | - | - |   |   | - | - | X | X | X | X | - |   | X | X | X | d |
 | e | X | X |   |   | X | X | X | X | X | X | X |   | X | X | X | X | e |
